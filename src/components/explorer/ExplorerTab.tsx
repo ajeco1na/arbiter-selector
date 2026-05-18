@@ -1,0 +1,50 @@
+import { ExplorerProvider, useExplorer } from '../../context/ExplorerProvider';
+import { CausePicker } from './CausePicker';
+import { EffectPicker } from './EffectPicker';
+import { LawResult, CopyButton } from '../shared';
+import { getLawValue } from '../../lib/law-utils';
+import { CAUSE_LABELS, EFFECT_LABELS } from '../../data/constants';
+
+function ExplorerContent() {
+  const { selectedCause, selectedEffect } = useExplorer();
+
+  const hasSelection = selectedCause && selectedEffect;
+  const lawValue = hasSelection ? getLawValue(selectedCause, selectedEffect) : null;
+
+  return (
+    <div className="explorer-tab">
+      <div className="explorer-tab__selectors">
+        <CausePicker />
+        <EffectPicker />
+      </div>
+
+      {hasSelection && lawValue ? (
+        <div className="explorer-tab__result">
+          <LawResult
+            causeLabel={CAUSE_LABELS[selectedCause]}
+            effectLabel={EFFECT_LABELS[selectedEffect]}
+            tier2={lawValue.tier2}
+            tier3={lawValue.tier3}
+          />
+          <CopyButton />
+        </div>
+      ) : (
+        <div className="explorer-tab__empty">
+          <p className="explorer-tab__hint">
+            {!selectedCause
+              ? 'Select a cause to begin exploring Arbiter laws.'
+              : 'Now select an effect to see the values.'}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function ExplorerTab() {
+  return (
+    <ExplorerProvider>
+      <ExplorerContent />
+    </ExplorerProvider>
+  );
+}

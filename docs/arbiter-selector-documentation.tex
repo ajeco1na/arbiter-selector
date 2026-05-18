@@ -1,0 +1,676 @@
+\documentclass[11pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{multirow}
+
+% --- Hyperlink colors ---
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!70!black,
+  citecolor=blue!70!black,
+}
+
+% --- Code listings ---
+\definecolor{codebg}{rgb}{0.95,0.95,0.98}
+\lstset{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  framesep=4pt,
+  keywordstyle=\color{blue!70!black},
+  commentstyle=\color{gray},
+  stringstyle=\color{red!60!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  tabsize=2,
+  language=TypeScript,
+}
+
+% --- Section formatting ---
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{blue!70!black}}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!60!black}}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+% --- Header/footer ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{Arbiter Selector — Documentación}
+\fancyfoot[C]{\thepage}
+
+% --- Title ---
+\title{\vspace{2cm}\Huge\textbf{Arbiter Selector}\\[0.5cm]
+  \Large Documentación del Proyecto\\[0.3cm]
+  \normalsize TFT Set 17 — Spec-Driven Development}
+\author{Equipo de Desarrollo}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\cleardoublepage
+
+% --- Table of Contents ---
+\tableofcontents
+\cleardoublepage
+
+% ============================================================
+\chapter{Resumen Ejecutivo}
+% ============================================================
+
+\section{Propósito del Proyecto}
+
+\textbf{Arbiter Selector} es una aplicación web interactiva de una sola página (SPA) que permite a los jugadores de \textit{Teamfight Tactics} (TFT) Set 17 explorar, simular y compartir combinaciones del rasgo \textbf{Arbiter} (Sentencia).
+
+El rasgo Arbiter consiste en una matriz de $9 \times 9$ combinaciones de \textit{causa-efecto} (``leyes divinas''), donde no todos los emparejamientos son válidos. Esta herramienta cubre tres modos de interacción:
+
+\begin{enumerate}
+  \item \textbf{Simulador}: Selección aleatoria de $3 \times 3$ leyes imitando la experiencia del juego, con función de re-roll y combinaciones válidas garantizadas.
+  \item \textbf{Explorador}: Selección libre de causa/efecto con acceso a la matriz completa, filtrado de efectos válido por causa, y URLs compartibles.
+  \item \textbf{Base de Datos}: Tabla de referencia completa $9 \times 9$ y tarjetas de referencia de campeones.
+\end{enumerate}
+
+\section{Stack Tecnológico}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Capa} & \textbf{Tecnología} \\
+\midrule
+Build & Vite 6 \\
+Framework & React 19 + TypeScript 5.7 \\
+Estilos & CSS vanilla con custom properties \\
+Iconos UI & lucide-react \\
+Iconos stats & SVG inline (9 componentes) \\
+Testing & Vitest (26 tests) \\
+Deploy & GitHub Pages (GitHub Actions) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Métricas del Proyecto}
+
+\begin{itemize}
+  \item \textbf{Tasks completadas}: 31 de 31 (100\%)
+  \item \textbf{Fases}: 6 (Foundation, Core Components, Utilities, Tab Implementation, App Assembly, Testing)
+  \item \textbf{Archivos creados}: $\sim$54
+  \item \textbf{Tests}: 26/26 passing
+  \item \textbf{Bundle}: 212 KB JS, 12 KB CSS (68 KB gzipped total)
+  \item \textbf{TypeScript}: 0 errores en modo strict
+\end{itemize}
+
+\cleardoublepage
+
+% ============================================================
+\chapter{Exploración}
+% ============================================================
+
+\section{Estado Actual}
+
+Proyecto greenfield. No existe código previo. Los requisitos se definieron a partir de los datos oficiales de la wiki de TFT Set 17.
+
+\section{Enfoques Considerados}
+
+\subsection{Estructura de Datos}
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{@{}lXll@{}}
+\toprule
+\textbf{Enfoque} & \textbf{Descripción} & \textbf{Pros} & \textbf{Contras} \\
+\midrule
+A: Matriz plana & \texttt{Record<CauseId, Record<EffectId, LawValues | null>>} & O(1) lookup, type-safe, simple & Difícil de extender para otros traits \\
+B: Arrays normalizados & Arrays separados + Set de pares válidos & Extensible, separación clara & Más archivos, lookups complejos \\
+C: Sistema genérico & Interfaz \texttt{TraitDefinition} abstracta & Future-proof & Over-engineering para un solo trait \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Decisión}: Enfoque A (matriz plana). La app es específicamente para Arbiter. Si se agregan más traits después, se puede refactorizar.
+
+\subsection{Codificación de URL}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lXll@{}}
+\toprule
+\textbf{Opción} & \textbf{Ejemplo} & \textbf{Pros} & \textbf{Contras} \\
+\midrule
+A: Slugs legibles & \texttt{?cause=attacks-3x\&effect=max-health} & Debuggable, compartible, SEO-friendly & URLs más largas \\
+B: IDs numéricos & \texttt{?c=1\&e=3} & Más cortas & No legibles, frágiles \\
+C: Base64 & \texttt{?law=eyJ...} & Compacto & Opaco, difícil de debuggear \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Decisión}: Opción A (slugs legibles). Solo 2 parámetros necesarios. Los slugs funcionan como documentación.
+
+\subsection{Gestión de Estado}
+
+\textbf{Decisión}: React Context. El estado es pequeño (1 tab enum, 3 causas + 3 efectos para simulador, 1 causa + 1 efecto para explorador), las actualizaciones son infrecuentes, y no hay estado derivado complejo. No se necesita Zustand/Redux.
+
+\section{Riesgos Identificados}
+
+\begin{enumerate}
+  \item \textbf{Datos incompletos}: Algunos valores de la wiki son rangos (ej. ``8\%/9\%''). Se muestran tal cual con comentarios de fuente.
+  \item \textbf{Selección aleatoria}: Si la matriz es muy dispersa, los re-rolls pueden ser frecuentes. Solución: pre-computar pares válidos y muestrear de esos.
+  \item \textbf{Responsive mobile}: La tabla $9 \times 9$ es muy ancha. Scroll horizontal con headers sticky o layout basado en cards.
+  \item \textbf{Iconos}: Se necesitan íconos para stats. Se usan SVGs inline para cero dependencias externas.
+  \item \textbf{Parches de balance}: Los valores pueden cambiar entre parches. Capa de datos versionada por parche.
+\end{enumerate}
+
+\cleardoublepage
+
+% ============================================================
+\chapter{Propuesta}
+% ============================================================
+
+\section{Intención}
+
+El rasgo Arbiter en TFT Set 17 es el más complejo del set — una matriz de $9 \times 9$ de combinaciones causa-efecto donde no todas son válidas. Los jugadores necesitan una herramienta interactiva para entender, explorar y compartir combinaciones válidas de leyes. Esta app cubre ese vacío.
+
+\section{Alcance}
+
+\subsection{Dentro del Alcance}
+\begin{itemize}
+  \item Tab Simulador: Selección aleatoria $3 \times 3$ con re-roll y combinaciones válidas garantizadas
+  \item Tab Explorador: Selección libre con acceso a la matriz completa, filtrado de efectos, URLs compartibles
+  \item Tab Base de Datos: Tabla de referencia $9 \times 9$, tarjetas de campeones
+  \item URLs compartibles con query params legibles
+  \item Diseño responsive (desktop, tablet, mobile)
+  \item Tema oscuro con estética Space Gods (púrpura/cósmico)
+\end{itemize}
+
+\subsection{Fuera del Alcance}
+\begin{itemize}
+  \item Simulación de combate o cálculos de daño
+  \item Team builder o planificación de composiciones
+  \item Otros traits de TFT (solo Arbiter)
+  \item Backend o API — app estática 100\% client-side
+  \item Cuentas de usuario o persistencia más allá de URLs
+\end{itemize}
+
+\section{Criterios de Éxito}
+
+\begin{enumerate}
+  \item La app se deploya a GitHub Pages y carga sin errores
+  \item Los 3 tabs son completamente funcionales
+  \item Las URLs son compartibles y restauran el estado correctamente
+  \item Los datos coinciden con los valores de la wiki
+  \item La tabla muestra las 81 celdas con indicadores válidos/inválidos correctos
+  \item El simulador garantiza al menos una combinación válida por roll
+  \item El layout mobile es usable (probado a 375px)
+  \item TypeScript strict mode pasa con cero errores
+  \item Todos los tests pasan (vitest)
+\end{enumerate}
+
+\cleardoublepage
+
+% ============================================================
+\chapter{Especificación}
+% ============================================================
+
+\section{Dominio 1: Capa de Datos}
+
+\subsection{Tipos de Causa (REQ-DL-001 a REQ-DL-003)}
+
+El sistema define exactamente 9 identificadores de causa:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{ID} & \textbf{Descripción} \\
+\midrule
+\texttt{attacks-3x} & Unidad ataca 3 veces \\
+\texttt{combat-start-per-star} & Inicio de combate: por nivel de estrella \\
+\texttt{enemy-dies} & Muere una unidad enemiga \\
+\texttt{deals-damage-10x} & Unidad causa daño 10 veces \\
+\texttt{combat-start-per-interest} & Inicio de combate: por interés ganado \\
+\texttt{every-4s} & Cada 4 segundos en combate \\
+\texttt{spends-50-mana} & Unidad gasta 50 de maná \\
+\texttt{combat-start-if-rerolled} & Inicio de combate: si se hizo reroll \\
+\texttt{first-time-below-40hp} & Primera vez bajo 40\% de HP \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Tipos de Efecto (REQ-DL-004 a REQ-DL-006)}
+
+El sistema define exactamente 9 identificadores de efecto:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{ID} & \textbf{Descripción} \\
+\midrule
+\texttt{max-health} & Vida máxima \\
+\texttt{shield} & Escudo \\
+\texttt{armor-mr} & Armadura y Resistencia Mágica \\
+\texttt{attack-speed} & Velocidad de Ataque \\
+\texttt{ability-power} & Poder de Habilidad \\
+\texttt{mana} & Maná \\
+\texttt{chance-gold} & Probabilidad de oro \\
+\texttt{chance-reroll} & Probabilidad de reroll \\
+\texttt{chance-leona} & Probabilidad de Leona \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Matriz de Leyes (REQ-DL-007 a REQ-DL-011)}
+
+\begin{itemize}
+  \item Estructura: mapeo $9 \times 9$ donde cada par causa-efecto mapea a \texttt{LawValues} o \texttt{null}
+  \item Formato de valores: \texttt{tier2} (string) y \texttt{tier3} (string)
+  \item Combinaciones inválidas: representadas como \texttt{null}
+  \item Completitud: 81 entradas totales (72 válidas, 9 inválidas)
+  \item Performance: lookups en O(1)
+\end{itemize}
+
+\subsection{Datos de Campeones (REQ-DL-012 a REQ-DL-014)}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Nombre} & \textbf{Costo} & \textbf{Sinergia} & \textbf{Rol} \\
+\midrule
+Leona & 1g & Vanguard & Tank \\
+Zoe & 2g & Conduit & Support \\
+Diana & 3g & Challenger & Carry \\
+LeBlanc & 4g & Shepherd & Carry \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Dominio 2: Compartición por URL}
+
+\begin{itemize}
+  \item \textbf{Formato}: \texttt{?cause=attacks-3x\&effect=max-health} (slugs legibles, kebab-case)
+  \item \textbf{Tab}: \texttt{?tab=simulator|explorer|database}
+  \item \textbf{Restauración}: Al cargar la app, se parsea la URL y se restaura el estado
+  \item \textbf{Validación}: Slugs inválidos o combinaciones null se ignoran gracefulmente
+  \item \textbf{Copy-to-clipboard}: Botón con feedback visual (check verde por 2 segundos)
+  \item \textbf{Prohibido}: No se usa Base64 ni IDs numéricos en URLs
+\end{itemize}
+
+\section{Dominio 3: Simulador}
+
+\begin{itemize}
+  \item Selecciona exactamente 3 causas y 3 efectos aleatorios
+  \item \textbf{Garantía}: al menos una combinación válida existe entre las $3 \times 3$ opciones
+  \item Algoritmo: pick 3 causas $\rightarrow$ unión de efectos válidos $\rightarrow$ pick 3 efectos
+  \item Sin duplicados en causas ni efectos
+  \item Re-roll independiente (no influenciado por rolls anteriores)
+  \item Máximo 10 intentos antes de fallback determinista
+\end{itemize}
+
+\section{Dominio 4: Componentes UI}
+
+\subsection{Navegación por Tabs (REQ-UI-001 a REQ-UI-005)}
+\begin{itemize}
+  \item 3 tabs: Simulator, Explorer, Database
+  \item Tab activo indicado visualmente
+  \item URL se sincroniza al cambiar de tab
+  \item Tab por defecto: Simulator
+\end{itemize}
+
+\subsection{Selectores de Causa y Efecto (REQ-UI-006 a REQ-UI-017)}
+\begin{itemize}
+  \item Cards seleccionables con hover y selected states
+  \item Efectos filtrados por causa seleccionada (solo válidos)
+  \item Toggle: clickear la misma card la deselecciona
+\end{itemize}
+
+\subsection{Display de Resultados (REQ-UI-018 a REQ-UI-022)}
+\begin{itemize}
+  \item Muestra tier-2 y tier-3 lado a lado
+  \item Diferenciación visual entre tiers
+  \item Mensaje apropiado para combinaciones inválidas
+\end{itemize}
+
+\subsection{Tabla de Base de Datos (REQ-UI-023 a REQ-UI-028)}
+\begin{itemize}
+  \item Matriz completa $9 \times 9$ con headers sticky
+  \item Celdas válidas muestran valores tier2 $\rightarrow$ tier3
+  \item Celdas inválidas muestran ``---'' con opacidad reducida
+  \item Zebra striping para legibilidad
+  \item Scroll horizontal en mobile
+\end{itemize}
+
+\subsection{Tema Oscuro (REQ-UI-032 a REQ-UI-036)}
+\begin{itemize}
+  \item Paleta basada en hue 250-270 (púrpura/cósmico)
+  \item Todos los colores como CSS custom properties
+  \item Contraste WCAG AA mínimo
+\end{itemize}
+
+\section{Requisitos No Funcionales}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{ID} & \textbf{Requisito} \\
+\midrule
+NFR-001 & TypeScript strict mode, cero errores \\
+NFR-002 & Sin librerías externas de estado (solo React Context) \\
+NFR-003 & CSS vanilla con custom properties, sin CSS-in-JS \\
+NFR-004 & Cero dependencias de assets externos (SVGs inline) \\
+NFR-005 & 100\% client-side, sin backend \\
+NFR-006 & Vite como build tool \\
+NFR-007 & Vitest para unit tests \\
+NFR-008 & Carga en menos de 2 segundos \\
+NFR-009 & Bundle bajo 100 KB gzipped \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\cleardoublepage
+
+% ============================================================
+\chapter{Diseño Técnico}
+% ============================================================
+
+\section{Enfoque Técnico}
+
+La app se organiza alrededor de un componente \texttt{App} que posee el estado del tab y la sincronización con URL. Cada tab es un módulo autocontenido con sus sub-componentes. Los datos fluyen unidireccionalmente desde \texttt{arbiter-data.ts} a través de React Context hacia los componentes hoja.
+
+\subsection{Principios Core}
+\begin{itemize}
+  \item \textbf{Única fuente de verdad}: \texttt{arbiter-data.ts} es el único archivo de datos
+  \item \textbf{URL como espejo de estado}: Cada acción del usuario actualiza la URL; el reload restaura el estado
+  \item \textbf{Context slices separados}: \texttt{TabContext}, \texttt{SimulatorContext}, \texttt{ExplorerContext} — separados para evitar re-renders innecesarios
+  \item \textbf{Capa de utilidades puras}: Toda la lógica de leyes vive en \texttt{lib/} como funciones puras, completamente testeables
+\end{itemize}
+
+\section{Decisiones de Arquitectura}
+
+\subsection{Estructura de Datos: Matriz Plana}
+
+\textbf{Decisión}: \texttt{Record<CauseId, Record<EffectId, LawValues | null>>}
+
+\textbf{Racional}:
+\begin{itemize}
+  \item Lookup O(1): \texttt{matrix[causeId][effectId]} — sin iteración
+  \item Auto-documentado: las keys son slugs semánticos
+  \item TypeScript proporciona autocompletado en las 9 causas y 9 efectos
+  \item Pares inválidos son explícitamente \texttt{null}
+\end{itemize}
+
+\subsection{Gestión de Estado: React Context}
+
+Tres contextos separados para evitar re-renders innecesarios:
+\begin{itemize}
+  \item \texttt{TabProvider} — \texttt{activeTab}, \texttt{setActiveTab}
+  \item \texttt{SimulatorProvider} — \texttt{causes[]}, \texttt{effects[]}, \texttt{roll()}
+  \item \texttt{ExplorerProvider} — \texttt{selectedCause}, \texttt{selectedEffect}
+\end{itemize}
+
+\subsection{Codificación de URL: Slugs Legibles}
+
+\texttt{URLSearchParams} con slugs kebab-case. Sin Base64, sin IDs numéricos.
+
+\subsection{Organización de Componentes: Feature Folders}
+
+\begin{lstlisting}[language=,basicstyle=\ttfamily\footnotesize]
+src/components/
+├── layout/          — Header, TabNav
+├── simulator/       — SimulatorTab, LawSelector, LawGrid
+├── explorer/        — ExplorerTab, CausePicker, EffectPicker
+├── database/        — DatabaseTab, MatrixTable, ChampionCards
+└── shared/          — LawResult, CopyButton, EmptyState
+\end{lstlisting}
+
+\subsection{Estilos: CSS Custom Properties + Vanilla CSS}
+
+Paleta Space Gods (hue 260):
+\begin{itemize}
+  \item \texttt{--surface-0} a \texttt{--surface-3} — capas de fondo
+  \item \texttt{--text-primary}, \texttt{--text-secondary}, \texttt{--text-tertiary} — jerarquía de texto
+  \item \texttt{--accent} (hsl 275, 70\%, 62\%) — color principal
+  \item Escala de spacing de 8px (\texttt{--space-1} a \texttt{--space-9})
+\end{itemize}
+
+\subsection{Estrategia de Iconos}
+
+Dos niveles:
+\begin{itemize}
+  \item \textbf{Iconos de stats} (HP, Shield, AS, AP, Mana, Gold, etc.): SVGs inline en \texttt{src/icons/}
+  \item \textbf{Iconos de UI} (flechas, refresh, copy): \texttt{lucide-react} con tree-shaking
+\end{itemize}
+
+\section{Flujo de Datos}
+
+\begin{lstlisting}[language=,basicstyle=\ttfamily\footnotesize]
+arbiter-data.ts (matriz 9x9, campeones)
+    │
+    ▼
+lib/ utilities (law-utils.ts, law-encoding.ts)
+    │
+    ▼
+React Context Layer (TabContext, SimulatorContext, ExplorerContext)
+    │
+    ▼
+Component Tree (App → Header → TabNav → Tabs)
+    │
+    ▼
+URL Synchronization (decodeUrl on mount, encodeUrl on change)
+\end{lstlisting}
+
+\section{Estructura Final de Archivos}
+
+\begin{lstlisting}[language=,basicstyle=\ttfamily\footnotesize]
+arbiter-selector/
+├── .github/workflows/deploy.yml
+├── package.json
+├── vite.config.ts
+├── vitest.config.ts
+├── tsconfig.json / tsconfig.app.json / tsconfig.node.json
+├── index.html
+├── .gitignore
+├── public/favicon.svg
+└── src/
+    ├── main.tsx
+    ├── App.tsx
+    ├── index.css (~500 líneas)
+    ├── types.ts
+    ├── context/
+    │   ├── index.ts
+    │   ├── AppProvider.tsx
+    │   ├── SimulatorProvider.tsx
+    │   └── ExplorerProvider.tsx
+    ├── data/
+    │   ├── arbiter-data.ts (matriz 9x9, 72 válidas, 9 null)
+    │   └── constants.ts
+    ├── lib/
+    │   ├── index.ts
+    │   ├── law-utils.ts (7 funciones)
+    │   ├── law-utils.test.ts (12 tests)
+    │   ├── law-encoding.ts (8 funciones)
+    │   └── law-encoding.test.ts (14 tests)
+    ├── icons/ (9 componentes SVG)
+    └── components/
+        ├── layout/ (Header, TabNav)
+        ├── shared/ (LawResult, CopyButton, EmptyState)
+        ├── simulator/ (LawSelector, LawGrid, SimulatorTab)
+        ├── explorer/ (CausePicker, EffectPicker, ExplorerTab)
+        └── database/ (MatrixTable, ChampionCards, DatabaseTab)
+\end{lstlisting}
+
+\cleardoublepage
+
+% ============================================================
+\chapter{Implementación — Tasks}
+% ============================================================
+
+\section{Fase 1: Foundation / Infrastructure (6 tasks)}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Task} & \textbf{Descripción} & \textbf{Archivos} \\
+\midrule
+1.1 & Project scaffolding (Vite + React + TS) & package.json, tsconfigs, vite.config.ts, index.html \\
+1.2 & TypeScript types & src/types.ts \\
+1.3 & Data layer (matriz 9x9) & src/data/arbiter-data.ts \\
+1.4 & Constants (labels, arrays) & src/data/constants.ts \\
+1.5 & CSS foundation (Space Gods theme) & src/index.css \\
+1.6 & Stat icons (9 SVGs) & src/icons/*.tsx \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Fase 2: Core Components (7 tasks)}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Task} & \textbf{Descripción} & \textbf{Archivos} \\
+\midrule
+2.1 & AppProvider con TabContext + URL sync & src/context/AppProvider.tsx \\
+2.2 & Header component & src/components/layout/Header.tsx \\
+2.3 & TabNav component & src/components/layout/TabNav.tsx \\
+2.4 & LawResult component & src/components/shared/LawResult.tsx \\
+2.5 & CopyButton component & src/components/shared/CopyButton.tsx \\
+2.6 & EmptyState component & src/components/shared/EmptyState.tsx \\
+2.7 & Barrel exports & src/context/index.ts, etc. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Fase 3: Utilities (3 tasks)}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Task} & \textbf{Descripción} & \textbf{Archivos} \\
+\midrule
+3.1 & law-utils (7 funciones puras) & src/lib/law-utils.ts \\
+3.2 & law-encoding (8 funciones URL) & src/lib/law-encoding.ts \\
+3.3 & Barrel export & src/lib/index.ts \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Fase 4: Tab Implementation (11 tasks)}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Task} & \textbf{Descripción} & \textbf{Archivos} \\
+\midrule
+4.1 & SimulatorProvider & src/context/SimulatorProvider.tsx \\
+4.2 & LawSelector & src/components/simulator/LawSelector.tsx \\
+4.3 & LawGrid (layout horizontal) & src/components/simulator/LawGrid.tsx \\
+4.4 & SimulatorTab & src/components/simulator/SimulatorTab.tsx \\
+4.5 & ExplorerProvider + URL sync & src/context/ExplorerProvider.tsx \\
+4.6 & CausePicker (9 causas) & src/components/explorer/CausePicker.tsx \\
+4.7 & EffectPicker (filtrado) & src/components/explorer/EffectPicker.tsx \\
+4.8 & ExplorerTab & src/components/explorer/ExplorerTab.tsx \\
+4.9 & MatrixTable (9x9) & src/components/database/MatrixTable.tsx \\
+4.10 & ChampionCards (4 campeones) & src/components/database/ChampionCards.tsx \\
+4.11 & DatabaseTab & src/components/database/DatabaseTab.tsx \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Fase 5: App Assembly (3 tasks)}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Task} & \textbf{Descripción} & \textbf{Archivos} \\
+\midrule
+5.1 & App.tsx con tab routing & src/App.tsx \\
+5.2 & main.tsx con TabProvider & src/main.tsx \\
+5.3 & GitHub Pages deploy workflow & .github/workflows/deploy.yml \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Fase 6: Testing (3 tasks)}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Task} & \textbf{Descripción} & \textbf{Resultado} \\
+\midrule
+6.1 & Unit tests law-utils & 12 tests passing \\
+6.2 & Unit tests law-encoding & 14 tests passing \\
+6.3 & Build verification & tsc: 0 errores, build: success \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Descubrimiento Clave}
+
+Vite y Vitest shippean versiones incompatibles del bundler interno. \textbf{No se puede mergear} la configuración de Vitest en \texttt{vite.config.ts} — requiere un \texttt{vitest.config.ts} separado con entorno jsdom.
+
+\cleardoublepage
+
+% ============================================================
+\chapter{Resultados de Verificación}
+% ============================================================
+
+\section{Build Final}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Métrica} & \textbf{Valor} \\
+\midrule
+TypeScript (tsc --noEmit) & 0 errores \\
+Build (npm run build) & Success (7.97s) \\
+HTML & 0.63 KB \\
+CSS & 12.10 KB (2.49 KB gzipped) \\
+JS & 212.18 KB (65.56 KB gzipped) \\
+\textbf{Total gzipped} & \textbf{$\sim$68 KB} (bajo límite de 100 KB) \\
+Tests (vitest run) & 26/26 passing \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Estado del Proyecto}
+
+\textbf{TODAS LAS 31 TASKS COMPLETADAS} — El proyecto es completamente funcional, testeado y listo para deployment.
+
+\end{document}
