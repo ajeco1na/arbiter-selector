@@ -1,6 +1,6 @@
 import { SimulatorProvider, useSimulator } from '../../context/SimulatorProvider';
 import { LawGrid } from './LawGrid';
-import { LawResult, EmptyState, TraitDescription } from '../shared';
+import { LawResult, EmptyState, TraitDescription, StatIcon } from '../shared';
 import { getLawValue } from '../../lib/law-utils';
 import { CAUSE_LABELS, EFFECT_LABELS } from '../../data/constants';
 import type { CauseId, EffectId } from '../../types';
@@ -28,6 +28,7 @@ function SimulatorContent() {
           effectLabel={EFFECT_LABELS[selectedEffect]}
           tier2={lawValue.tier2}
           tier3={lawValue.tier3}
+          icon={<StatIcon effectId={selectedEffect as EffectId} size={20} />}
         />
       ) : (
         <EmptyState

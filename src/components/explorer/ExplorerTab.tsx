@@ -1,9 +1,10 @@
 import { ExplorerProvider, useExplorer } from '../../context/ExplorerProvider';
 import { CausePicker } from './CausePicker';
 import { EffectPicker } from './EffectPicker';
-import { LawResult, CopyButton } from '../shared';
+import { LawResult, CopyButton, StatIcon } from '../shared';
 import { getLawValue } from '../../lib/law-utils';
 import { CAUSE_LABELS, EFFECT_LABELS } from '../../data/constants';
+import type { EffectId } from '../../types';
 
 function ExplorerContent() {
   const { selectedCause, selectedEffect } = useExplorer();
@@ -25,6 +26,7 @@ function ExplorerContent() {
             effectLabel={EFFECT_LABELS[selectedEffect]}
             tier2={lawValue.tier2}
             tier3={lawValue.tier3}
+            icon={<StatIcon effectId={selectedEffect as EffectId} size={20} />}
           />
           <CopyButton />
         </div>

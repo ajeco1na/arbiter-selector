@@ -1,4 +1,5 @@
 import { ALL_CAUSES, ALL_EFFECTS, CAUSE_LABELS, EFFECT_LABELS } from '../../data/constants';
+import { StatIcon } from '../shared';
 import { getLawValue } from '../../lib/law-utils';
 import type { CauseId, EffectId } from '../../types';
 
@@ -21,7 +22,10 @@ export function MatrixTable() {
           <tbody>
             {ALL_EFFECTS.map(effect => (
               <tr key={effect} className="matrix-table__row">
-                <td className="matrix-table__label">{EFFECT_LABELS[effect]}</td>
+                <td className="matrix-table__label">
+                  <StatIcon effectId={effect} />
+                  {EFFECT_LABELS[effect]}
+                </td>
                 {ALL_CAUSES.map(cause => {
                   const value = getLawValue(cause as CauseId, effect as EffectId);
                   return (

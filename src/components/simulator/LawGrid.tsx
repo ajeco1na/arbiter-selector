@@ -1,6 +1,8 @@
 import { useSimulator } from '../../context/SimulatorProvider';
 import { LawSelector } from './LawSelector';
+import { StatIcon } from '../shared';
 import { CAUSE_LABELS, EFFECT_LABELS } from '../../data/constants';
+import type { EffectId } from '../../types';
 
 export function LawGrid() {
   const { causes, effects, selectedCause, selectedEffect, selectCause, selectEffect } = useSimulator();
@@ -26,6 +28,7 @@ export function LawGrid() {
         labels={EFFECT_LABELS}
         selected={selectedEffect}
         onSelect={selectEffect}
+        getIcon={(item) => <StatIcon effectId={item as EffectId} />}
       />
     </div>
   );

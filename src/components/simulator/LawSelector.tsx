@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { CauseId, EffectId } from '../../types';
 
 interface LawSelectorProps<T extends CauseId | EffectId> {
@@ -6,6 +7,7 @@ interface LawSelectorProps<T extends CauseId | EffectId> {
   labels: Record<CauseId, string> | Record<EffectId, string>;
   selected: T | null;
   onSelect: (item: T) => void;
+  getIcon?: (item: T) => ReactNode;
 }
 
 export function LawSelector<T extends CauseId | EffectId>({
@@ -14,6 +16,7 @@ export function LawSelector<T extends CauseId | EffectId>({
   labels,
   selected,
   onSelect,
+  getIcon,
 }: LawSelectorProps<T>) {
   return (
     <div className="law-selector">
@@ -25,6 +28,7 @@ export function LawSelector<T extends CauseId | EffectId>({
             className={`law-selector__card ${selected === item ? 'law-selector__card--selected' : ''}`}
             onClick={() => onSelect(item)}
           >
+            {getIcon?.(item)}
             <span className="law-selector__label">{labels[item as keyof typeof labels]}</span>
           </button>
         ))}
