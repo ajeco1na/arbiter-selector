@@ -1,6 +1,6 @@
 import { useExplorer } from '../../context/ExplorerProvider';
 import { StatIcon } from '../shared';
-import { EFFECT_LABELS } from '../../data/constants';
+import { EFFECT_LABELS_FULL } from '../../data/constants';
 
 export function EffectPicker() {
   const { selectedCause, selectedEffect, selectEffect, validEffects } = useExplorer();
@@ -27,7 +27,7 @@ export function EffectPicker() {
             onClick={() => selectEffect(effect)}
           >
             <StatIcon effectId={effect} />
-            {EFFECT_LABELS[effect]}
+            {EFFECT_LABELS_FULL[effect]}
           </button>
         ))}
       </div>

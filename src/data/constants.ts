@@ -24,6 +24,18 @@ export const EFFECT_LABELS: Record<EffectId, string> = {
   'chance-leona': 'Chance of Leona',
 };
 
+export const EFFECT_LABELS_FULL: Record<EffectId, string> = {
+  'max-health': 'Arbiters gain Max Health',
+  'shield': 'Arbiters gain Shield',
+  'armor-mr': 'Arbiters gain Armor + Magic Resist',
+  'attack-speed': 'Arbiters gain Attack Speed',
+  'ability-power': 'Arbiters gain Ability Power',
+  'mana': 'Arbiters gain Mana',
+  'chance-gold': 'Arbiters gain Chance of Gold',
+  'chance-reroll': 'Arbiters gain Chance of Reroll',
+  'chance-leona': 'Arbiters gain Chance of Leona',
+};
+
 export const ALL_CAUSES: CauseId[] = [
   'attacks-3x', 'combat-start-per-star', 'enemy-dies',
   'deals-damage-10x', 'combat-start-per-interest', 'every-4s',

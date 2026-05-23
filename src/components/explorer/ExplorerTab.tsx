@@ -3,7 +3,7 @@ import { CausePicker } from './CausePicker';
 import { EffectPicker } from './EffectPicker';
 import { LawResult, CopyButton, StatIcon } from '../shared';
 import { getLawValue } from '../../lib/law-utils';
-import { CAUSE_LABELS, EFFECT_LABELS } from '../../data/constants';
+import { CAUSE_LABELS, EFFECT_LABELS_FULL } from '../../data/constants';
 import type { EffectId } from '../../types';
 
 function ExplorerContent() {
@@ -23,7 +23,7 @@ function ExplorerContent() {
         <div className="explorer-tab__result">
           <LawResult
             causeLabel={CAUSE_LABELS[selectedCause]}
-            effectLabel={EFFECT_LABELS[selectedEffect]}
+            effectLabel={EFFECT_LABELS_FULL[selectedEffect]}
             tier2={lawValue.tier2}
             tier3={lawValue.tier3}
             icon={<StatIcon effectId={selectedEffect as EffectId} size={20} />}
