@@ -38,6 +38,7 @@ export interface Champion {
   cost: number;
   secondarySynergy: string;
   role: string;
+  splashUrl: string;
 }
 
 // Law selection state

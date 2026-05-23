@@ -7,12 +7,19 @@ export function ChampionCards() {
       <div className="champion-cards__grid">
         {champions.map(champ => (
           <div key={champ.id} className="champion-card fade-in">
-            <div className="champion-card__header">
-              <span className="champion-card__cost">{champ.cost}g</span>
-              <span className="champion-card__role">{champ.role}</span>
+            <div
+              className="champion-card__splash"
+              style={{ backgroundImage: `url(${champ.splashUrl})` }}
+            >
+              <div className="champion-card__header">
+                <span className="champion-card__cost">{champ.cost}g</span>
+                <span className="champion-card__role">{champ.role}</span>
+              </div>
+              <div className="champion-card__footer">
+                <h4 className="champion-card__name">{champ.name}</h4>
+                <p className="champion-card__synergy">{champ.secondarySynergy}</p>
+              </div>
             </div>
-            <h4 className="champion-card__name">{champ.name}</h4>
-            <p className="champion-card__synergy">{champ.secondarySynergy}</p>
           </div>
         ))}
       </div>

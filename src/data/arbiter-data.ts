@@ -103,10 +103,38 @@ export const LAW_MATRIX: ArbiterMatrix = {
 };
 
 export const champions: Champion[] = [
-  { id: 'leona', name: 'Leona', cost: 1, secondarySynergy: 'Vanguard', role: 'tank' },
-  { id: 'zoe', name: 'Zoe', cost: 2, secondarySynergy: 'Conduit', role: 'support' },
-  { id: 'diana', name: 'Diana', cost: 3, secondarySynergy: 'Challenger', role: 'carry' },
-  { id: 'leblanc', name: 'LeBlanc', cost: 4, secondarySynergy: 'Shepherd', role: 'carry' },
+  {
+    id: 'leona',
+    name: 'Leona',
+    cost: 1,
+    secondarySynergy: 'Vanguard',
+    role: 'tank',
+    splashUrl: 'https://raw.communitydragon.org/latest/game/assets/characters/tft17_leona/skins/base/images/tft17_leona_splash_tile_64.tft_set17.png',
+  },
+  {
+    id: 'zoe',
+    name: 'Zoe',
+    cost: 2,
+    secondarySynergy: 'Conduit',
+    role: 'support',
+    splashUrl: 'https://raw.communitydragon.org/latest/game/assets/characters/tft17_zoe/skins/base/images/tft17_zoe_splash_tile_43.tft_set17.png',
+  },
+  {
+    id: 'diana',
+    name: 'Diana',
+    cost: 3,
+    secondarySynergy: 'Challenger',
+    role: 'carry',
+    splashUrl: 'https://raw.communitydragon.org/latest/game/assets/characters/tft17_diana/skins/base/images/tft17_dianasplash_pc.tft_set17.png',
+  },
+  {
+    id: 'leblanc',
+    name: 'LeBlanc',
+    cost: 4,
+    secondarySynergy: 'Shepherd',
+    role: 'carry',
+    splashUrl: 'https://raw.communitydragon.org/latest/game/assets/characters/tft17_leblanc/skins/base/images/tft17_leblanc_splash_tile_29.tft_set17.png',
+  },
 ];
 
 export const PATCH_VERSION = '17.2';
