@@ -1,6 +1,6 @@
 import { SimulatorProvider, useSimulator } from '../../context/SimulatorProvider';
 import { LawGrid } from './LawGrid';
-import { LawResult, EmptyState } from '../shared';
+import { LawResult, EmptyState, TraitDescription } from '../shared';
 import { getLawValue } from '../../lib/law-utils';
 import { CAUSE_LABELS, EFFECT_LABELS } from '../../data/constants';
 import type { CauseId, EffectId } from '../../types';
@@ -13,6 +13,7 @@ function SimulatorContent() {
 
   return (
     <div className="simulator-tab">
+      <TraitDescription />
       <LawGrid />
 
       <div className="simulator-tab__actions">

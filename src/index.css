@@ -673,6 +673,44 @@ body {
   background: hsl(var(--hue), 10%, 8%);
 }
 
+/* === Trait Description === */
+.trait-description {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+}
+
+.trait-description__flavor {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-3);
+  font-style: italic;
+}
+
+.trait-description__breakpoints {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.trait-description__breakpoint {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.trait-description__breakpoint strong {
+  color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  .trait-description__breakpoints {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+}
+
 /* === Champion Cards === */
 .champion-cards__title {
   font-size: var(--text-lg);
